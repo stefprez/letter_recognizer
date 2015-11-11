@@ -36,7 +36,6 @@ class Input(object):
 
     def analyze(self):
         self._analyze_text()
-        self._check_results()
         self.print_result()
 
     def train(self):
@@ -78,10 +77,18 @@ class Input(object):
         self._update_results()
 
     def _update_results(self):
+        found = False
         for letter, neuron in self.neurons.iteritems():
             if neuron.analyze(self.inputs) == 1:
+                if found:
+                    self._reset_nets()
+                    found = False
+                    break
                 self.nets[letter] = True
                 self.result = letter
+                found = True
+        if not found:
+            self.result = "Not Recognized"
 
     def _compute_inputs(self):
         if not self.inputs:
@@ -103,6 +110,8 @@ class Input(object):
             neuron.train(self.inputs, desired)
 
     def print_result(self):
+        for key, value in self.nets.iteritems():
+            print key, value
         filename = self.filename.split("/")[-1]
         print "{0}: {1}".format(filename, self.result)
 
@@ -136,7 +145,7 @@ class Input(object):
 
 
 class Neuron(object):
-    alpha = 0.1
+    alpha = 0.00001
 
     def __init__(self, letter):
         self.letter = letter
@@ -209,8 +218,8 @@ def training():
     counter = 0
     while not finished:
         counter += 1
-        # if counter % 5000 == 0:
-        #     print input_file.neurons['A'].print_weights()
+        # if counter % 500 == 0:
+        #     print counter
         for input_file in input_files:
             input_file.train()
         finished = input_files_valid(input_files)
